@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Society: Sponsor Quest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+  :root {
+    --bg: #1a1a1a;
+    --surface: #2d2d2d;
+    --card: #3a3a3a;
+    --accent: #55ff55;       /* Minecraft green */
+    --accent2: #ff5555;      /* Creeper red */
+    --accent3: #55ffff;      /* Diamond blue */
+    --accent4: #ffaa00;      /* Gold */
+    --text: #f0f0f0;
+    --muted: #888888;
+    --grid-color: #333;
+    --wall: #5a3a1a;
+    --wall-glow: #8b5e2a;
+    /* Minecraft block colours */
+    --dirt: #8B6340;
+    --grass-top: #5D9E32;
+    --stone: #888;
+    --cobble: #666;
+    --wood: #9E7A3A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  image-rendering: pixelated;
+
+  body {
+    background: var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, #222 31px, #222 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, #222 31px, #222 32px);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* ── SCREEN MANAGEMENT ── */
+  .screen { display: none; width: 100%; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; }
+  .screen.active { display: flex; }
+
+  /* ── START SCREEN ── */
+  #start-screen {
+    background: linear-gradient(180deg, #1a3a1a 0%, #0a2a0a 40%, #1a1a1a 100%);
+    text-align: center;
+    padding: 2rem;
+    gap: 1.2rem;
+  }
+  .title-block { position: relative; }
+  .title-main {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1rem, 3.5vw, 2rem);
+    color: var(--accent);
+    text-shadow: 3px 3px 0 #1a4a1a, 0 0 20px #55ff5566;
+    line-height: 1.6;
+    letter-spacing: 2px;
+  }
+  .title-sub {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.4rem, 1.2vw, 0.6rem);
+    color: var(--accent3);
+    margin-top: 0.8rem;
+    text-shadow: 0 0 10px var(--accent3);
+    letter-spacing: 3px;
+  }
+  .pacman-logo {
+    font-size: 3.5rem;
+    animation: chomp 0.5s infinite alternate;
+    display: inline-block;
+    filter: drop-shadow(0 0 10px #55ff55);
+    image-rendering: pixelated;
+  }
+  @keyframes chomp {
+    from { transform: scale(1); }
+    to { transform: scale(1.1) rotate(-3deg); }
+  }
+  .start-desc {
+    max-width: 480px;
+    color: #aaa;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin: 0 auto;
+    font-family: 'VT323', monospace;
+    letter-spacing: 0.5px;
+  }
+  .start-desc span { color: var(--accent); }
+  .btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    padding: 0.8rem 1.8rem;
+    background: #5D9E32;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.1s;
+    box-shadow: 0 4px 0 #2d5a10, inset 0 1px 0 #7dbe52;
+    text-transform: uppercase;
+    image-rendering: pixelated;
+    position: relative;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #2d5a10, inset 0 1px 0 #7dbe52; background: #6db942; }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #2d5a10; }
+  .btn.secondary {
+    background: #555;
+    color: var(--accent3);
+    box-shadow: 0 4px 0 #222, inset 0 1px 0 #777;
+  }
+  .btn.secondary:hover { background: #666; box-shadow: 0 6px 0 #222; }
+  .controls-hint {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 2;
+    font-family: 'VT323', monospace;
+  }
+  .controls-hint kbd {
+    background: #444;
+    padding: 1px 6px;
+    border: 1px solid #666;
+    border-bottom: 3px solid #222;
+    color: #fff;
+    font-family: 'VT323', monospace;
+  }
+  .sponsor-preview {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+  }
+  .sp-badge {
+    background: #333;
+    border: 2px solid;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'VT323', monospace;
+    image-rendering: pixelated;
+  }
+
+  /* ── GAME SCREEN ── */
+  #game-screen {
+    background: #1a1a1a;
+    padding: 0.8rem;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+  .hud {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 560px;
+    padding: 0.4rem 0.8rem;
+    background: #2a2a2a;
+    border: 2px solid #555;
+    border-bottom: 3px solid #111;
+    font-size: 0.9rem;
+    font-family: 'VT323', monospace;
+    flex-wrap: wrap;
+  }
+  .hud-item { display: flex; align-items: center; gap: 0.4rem; }
+  .hud-label { color: #aaa; }
+  .hud-val { color: var(--accent); font-family: 'Press Start 2P', monospace; font-size: 0.5rem; }
+  .lives-display { display: flex; gap: 4px; }
+  .life-icon { color: #ff5555; font-size: 0.9rem; }
+  .depth-bar-wrap { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 120px; }
+  .depth-bar {
+    flex: 1; height: 10px;
+    background: #111;
+    border: 2px solid #555;
+    border-bottom: 2px solid #333;
+    position: relative; overflow: hidden;
+    image-rendering: pixelated;
+  }
+  .depth-fill {
+    height: 100%;
+    background: repeating-linear-gradient(90deg, #5D9E32 0px, #5D9E32 8px, #4a8228 8px, #4a8228 16px);
+    transition: width 0.5s;
+  }
+  #canvas-wrap {
+    position: relative;
+    border: 3px solid #555;
+    border-bottom: 4px solid #222;
+    border-right: 4px solid #222;
+    image-rendering: pixelated;
+  }
+  #gameCanvas { display: block; image-rendering: pixelated; }
+
+  /* ── OVERLAY PANELS ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .overlay.active { display: flex; }
+
+  /* ── UNDERGROUND / SPONSOR ZONE ── */
+  .underground-panel {
+    background: linear-gradient(180deg, #1a0f00 0%, #2a1800 50%, #1a0f00 100%);
+    border: 3px solid #8B6340;
+    border-bottom: 4px solid #4a3010;
+    box-shadow: 0 0 0 2px #5a3a1a, 6px 6px 0 #000;
+    max-width: 620px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    image-rendering: pixelated;
+  }
+  .ug-header {
+    background: #3a2800;
+    padding: 0.8rem 1rem;
+    border-bottom: 3px solid #8B6340;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(0,0,0,0.15) 7px, rgba(0,0,0,0.15) 8px);
+  }
+  .ug-depth-badge {
+    color: #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem;
+    padding: 0.3rem 0.5rem;
+    white-space: nowrap;
+    border: 2px solid rgba(0,0,0,0.4);
+  }
+  .ug-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.55rem;
+    color: #ffaa00;
+    text-shadow: 2px 2px 0 #552200;
+  }
+  .sponsor-logo-big {
+    width: 100%;
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: #2a1800;
+    border-bottom: 2px solid #4a3010;
+  }
+  .sponsor-icon-big { font-size: 3rem; }
+  .sponsor-name-big {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.6rem, 2.2vw, 1rem);
+    line-height: 1.6;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .ug-section { padding: 0 1rem 0.8rem; }
+  .ug-section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    color: #55ffff;
+    letter-spacing: 2px;
+    margin: 0.8rem 0 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid #3a2800;
+    text-shadow: 1px 1px 0 #003333;
+  }
+  .ug-desc { font-size: 1rem; color: #ddd; line-height: 1.7; font-family: 'VT323', monospace; }
+  .internship-tabs {
+    display: flex; gap: 0.4rem; margin-bottom: 0.6rem; flex-wrap: wrap;
+  }
+  .int-tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.37rem;
+    padding: 0.35rem 0.6rem;
+    background: #333;
+    border: 2px solid #555;
+    border-bottom: 3px solid #111;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .int-tab.active, .int-tab:hover {
+    background: #5D9E32; color: #fff;
+    border-color: #7dbe52; border-bottom-color: #2d5a10;
+  }
+  .int-content { font-size: 0.95rem; color: #ccc; line-height: 1.7; font-family: 'VT323', monospace; }
+  .int-content .role {
+    background: #2a1800;
+    border-left: 4px solid #8B6340;
+    padding: 0.4rem 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+  .int-content .role-title { color: #ffaa00; font-size: 0.95rem; margin-bottom: 0.15rem; font-family: 'VT323', monospace; }
+  .int-content .role-detail { color: #aaa; font-size: 0.88rem; }
+  .ug-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent3);
+    text-decoration: none;
+    font-size: 1rem;
+    font-family: 'VT323', monospace;
+    border-bottom: 2px solid var(--accent3);
+    padding-bottom: 1px;
+    transition: all 0.1s;
+    cursor: pointer;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .ug-link:hover { color: var(--accent); border-color: var(--accent); }
+  .ug-footer {
+    padding: 0.8rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #3a2800;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    background: #1a0f00;
+  }
+  .depth-indicator {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.9rem; color: #aaa; font-family: 'VT323', monospace;
+  }
+  .depth-dots { display: flex; gap: 3px; }
+  .depth-dot {
+    width: 10px; height: 10px;
+    border: 2px solid #555;
+    background: #111;
+    image-rendering: pixelated;
+  }
+  .depth-dot.filled { background: #5D9E32; border-color: #7dbe52; }
+
+  /* ── PUZZLE OVERLAY ── */
+  .puzzle-panel {
+    background: #1a1a1a;
+    border: 3px solid #aa2222;
+    border-bottom: 4px solid #550000;
+    box-shadow: 6px 6px 0 #000;
+    max-width: 580px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .puzzle-header {
+    background: #aa2222;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(0,0,0,0.2) 7px, rgba(0,0,0,0.2) 8px);
+    color: #fff;
+    padding: 0.7rem 1rem;
+    display: flex; align-items: center; gap: 0.7rem;
+  }
+  .puzzle-header-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem; letter-spacing: 1px;
+  }
+  .bug-icon { font-size: 1.4rem; }
+  .puzzle-body { padding: 1rem; }
+  .puzzle-progress {
+    font-size: 0.55rem; color: #aaa; margin-bottom: 0.8rem;
+    font-family: 'Press Start 2P', monospace;
+  }
+  .puzzle-q {
+    background: #2a2a2a;
+    border: 2px solid #555;
+    border-bottom: 3px solid #111;
+    padding: 0.8rem; margin-bottom: 0.8rem;
+    font-family: 'VT323', monospace;
+    font-size: 1rem; line-height: 1.7; color: #eee;
+  }
+  .puzzle-q .q-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem; color: #ff5555;
+    margin-bottom: 0.4rem; letter-spacing: 2px;
+  }
+  .puzzle-options { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
+  .puzzle-opt {
+    background: #333;
+    border: 2px solid #555;
+    border-bottom: 3px solid #111;
+    padding: 0.5rem 0.8rem;
+    font-size: 1rem; cursor: pointer;
+    transition: all 0.1s;
+    display: flex; align-items: center; gap: 0.5rem;
+    color: #ddd; font-family: 'VT323', monospace;
+  }
+  .puzzle-opt:hover { background: #444; border-color: var(--accent); transform: translateX(3px); }
+  .puzzle-opt.correct { background: #1a3a1a; border-color: var(--accent); color: var(--accent); }
+  .puzzle-opt.wrong { background: #3a1a1a; border-color: #ff5555; color: #ff5555; }
+  .puzzle-opt-key {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.4rem; color: #888; min-width: 14px;
+  }
+  .puzzle-feedback {
+    padding: 0.7rem; font-size: 0.95rem; margin-top: 0.6rem;
+    line-height: 1.6; display: none; font-family: 'VT323', monospace;
+  }
+  .puzzle-feedback.show { display: block; }
+  .puzzle-feedback.ok { background: #1a3a1a; border: 2px solid var(--accent); color: var(--accent); }
+  .puzzle-feedback.fail { background: #3a1a1a; border: 2px solid #ff5555; color: #ff5555; }
+  .puzzle-next-btn { margin-top: 0.8rem; }
+
+  /* ── WIN SCREEN ── */
+  #win-screen {
+    background: linear-gradient(180deg, #0a1a0a 0%, #0a0a0a 100%);
+    text-align: center; padding: 2rem; gap: 1.2rem;
+  }
+  .win-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.9rem, 3vw, 1.8rem);
+    color: var(--accent);
+    text-shadow: 3px 3px 0 #1a4a1a, 0 0 30px #55ff5544;
+    animation: mc-pulse 1.5s infinite alternate;
+    line-height: 1.6;
+  }
+  @keyframes mc-pulse {
+    from { text-shadow: 3px 3px 0 #1a4a1a; }
+    to { text-shadow: 3px 3px 0 #1a4a1a, 0 0 40px #55ff5566; }
+  }
+  .pizza-big {
+    font-size: 4rem;
+    animation: spin-bob 2s infinite ease-in-out;
+    display: inline-block;
+    filter: drop-shadow(0 0 20px #ffaa00);
+  }
+  @keyframes spin-bob {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(10deg); }
+  }
+  .win-stats {
+    background: #2a2a2a;
+    border: 2px solid #555; border-bottom: 3px solid #111;
+    padding: 1rem 1.8rem; font-size: 1rem; line-height: 2.2;
+    text-align: left; max-width: 360px; margin: 0 auto;
+    font-family: 'VT323', monospace;
+  }
+  .win-stat-val { color: var(--accent); float: right; font-family: 'Press Start 2P', monospace; font-size: 0.5rem; }
+
+  /* ── GAME OVER ── */
+  #gameover-screen {
+    background: linear-gradient(180deg, #1a0000 0%, #0a0a0a 100%);
+    text-align: center; padding: 2rem; gap: 1.2rem;
+  }
+  .gameover-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1rem, 3.5vw, 2rem);
+    color: #ff5555;
+    text-shadow: 3px 3px 0 #550000;
+    line-height: 1.6;
+  }
+
+  /* ── TREASURE PROMPT ── */
+  .treasure-prompt {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 90; flex-direction: column;
+    gap: 1.2rem; text-align: center; padding: 2rem;
+  }
+  .treasure-prompt.active { display: flex; }
+  .treasure-icon { font-size: 3.5rem; animation: bounce 0.6s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  .treasure-msg {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.5rem, 1.8vw, 0.75rem);
+    color: var(--accent);
+    line-height: 2; max-width: 400px;
+    text-shadow: 2px 2px 0 #1a4a1a;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #1a1a1a; border: 1px solid #333; }
+  ::-webkit-scrollbar-thumb { background: #555; border: 1px solid #333; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ START SCREEN ═══════════════════════════════ -->
+<div id="start-screen" class="screen active">
+  <div class="title-block">
+    <div class="pacman-logo">⛏️</div>
+    <div class="title-main">CS SOCIETY<br>SPONSOR QUEST</div>
+    <div class="title-sub">// mine · explore · employ //</div>
+  </div>
+  <p class="start-desc">
+    Mine <span>sponsor logo blocks</span> to unlock underground caves packed with company info &amp; internships.<br><br>
+    Beware the <span>mobs</span> 🐛 — get caught by a Creeper, Skeleton, Spider or Zombie and you'll need to answer questions to respawn!<br><br>
+    Collect all 8 sponsors → find the <span>chest</span> → claim the legendary <span>🍕 Pizza</span>.
+  </p>
+  <div class="sponsor-preview" id="sponsor-preview"></div>
+  <div class="controls-hint">
+    <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>WASD</kbd> to move &nbsp;|&nbsp; <kbd>P</kbd> pause &nbsp;|&nbsp; Press direction to move after respawn
+  </div>
+  <button class="btn" onclick="startGame()">INSERT COIN</button>
+</div>
+
+<!-- ═══════════════════════════════ GAME SCREEN ════════════════════════════════ -->
+<div id="game-screen" class="screen">
+  <div class="hud">
+    <div class="hud-item">
+      <span class="hud-label">SCORE</span>
+      <span class="hud-val" id="hud-score">0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">LIVES</span>
+      <div class="lives-display" id="hud-lives"></div>
+    </div>
+    <div class="hud-item depth-bar-wrap">
+      <span class="hud-label">DEPTH</span>
+      <div class="depth-bar"><div class="depth-fill" id="depth-fill" style="width:0%"></div></div>
+      <span class="hud-val" id="hud-depth">L0</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">SPONSORS</span>
+      <span class="hud-val" id="hud-sponsors">0/8</span>
+    </div>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  <div style="font-size:0.85rem;color:#888;margin-top:0.3rem;font-family:'VT323',monospace;">
+    Arrow keys / WASD · P = pause · Press direction after respawn to move
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ WIN SCREEN ════════════════════════════════ -->
+<div id="win-screen" class="screen">
+  <div class="pizza-big">🍕</div>
+  <div class="win-title">YOU WIN!<br>FREE PIZZA!</div>
+  <div class="win-stats" id="win-stats"></div>
+  <button class="btn" onclick="restartGame()">PLAY AGAIN</button>
+</div>
+
+<!-- ═══════════════════════════════ GAME OVER SCREEN ══════════════════════════ -->
+<div id="gameover-screen" class="screen">
+  <div style="font-size:2.5rem">💀</div>
+  <div class="gameover-title">YOU DIED</div>
+  <p style="font-size:1.1rem;color:#aaa;max-width:340px;text-align:center;line-height:1.7;font-family:'VT323',monospace;">
+    The mobs got you. Score your items and try again!
+  </p>
+  <div class="win-stats" id="gameover-stats"></div>
+  <button class="btn" onclick="restartGame()">TRY AGAIN</button>
+</div>
+
+<!-- ═══════════════════════════════ UNDERGROUND OVERLAY ══════════════════════ -->
+<div class="overlay" id="underground-overlay">
+  <div class="underground-panel" id="underground-panel">
+    <div class="ug-header">
+      <div class="ug-depth-badge" id="ug-depth-badge">LEVEL -1</div>
+      <div class="ug-title" id="ug-company-header">COMPANY NAME</div>
+    </div>
+    <div class="sponsor-logo-big">
+      <div class="sponsor-icon-big" id="ug-icon"></div>
+      <div>
+        <div class="sponsor-name-big" id="ug-name"></div>
+        <div style="font-size:0.62rem;color:var(--muted);margin-top:0.4rem;" id="ug-tagline"></div>
+      </div>
+    </div>
+    <div class="ug-section">
+      <div class="ug-section-title">// ABOUT</div>
+      <div class="ug-desc" id="ug-about"></div>
+    </div>
+    <div class="ug-section" style="margin-top:1rem;">
+      <div class="ug-section-title">// INTERNSHIPS & ROLES</div>
+      <div class="internship-tabs" id="ug-int-tabs"></div>
+      <div class="int-content" id="ug-int-content"></div>
+    </div>
+    <div class="ug-section" style="margin-top:1rem;">
+      <div class="ug-section-title">// LINKS</div>
+      <button id="ug-website-btn" class="ug-link" style="background:none;border:none;border-bottom:1px solid var(--accent3);cursor:pointer;padding-bottom:1px;" onclick="openSponsorWebsite()">🌐 Visit Website →</button>
+    </div>
+    <div class="ug-footer">
+      <div class="depth-indicator">
+        <span>DEPTH:</span>
+        <div class="depth-dots" id="depth-dots"></div>
+      </div>
+      <button class="btn secondary" onclick="closeUnderground()">↑ BACK TO SURFACE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PUZZLE OVERLAY ════════════════════════════ -->
+<div class="overlay" id="puzzle-overlay">
+  <div class="puzzle-panel">
+    <div class="puzzle-header">
+      <div class="bug-icon">💀</div>
+      <div>
+        <div class="puzzle-header-title">MOB GOT YOU!</div>
+        <div style="font-size:0.85rem;margin-top:0.2rem;font-family:'VT323',monospace;">Answer 2 questions to respawn...</div>
+      </div>
+    </div>
+    <div class="puzzle-body">
+      <div class="puzzle-progress" id="puzzle-progress">QUESTION 1 OF 2</div>
+      <div class="puzzle-q" id="puzzle-q-display">
+        <div class="q-label" id="puzzle-q-category">CATEGORY</div>
+        <div id="puzzle-q-text">Question text</div>
+        <div class="puzzle-options" id="puzzle-options"></div>
+      </div>
+      <div class="puzzle-feedback" id="puzzle-feedback"></div>
+      <button class="btn puzzle-next-btn" id="puzzle-next-btn" style="display:none;" onclick="puzzleNext()">
+        NEXT QUESTION →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TREASURE PROMPT ══════════════════════════ -->
+<div class="treasure-prompt" id="treasure-prompt">
+  <div class="treasure-icon">🎁</div>
+  <div class="treasure-msg">ALL SPONSORS COLLECTED!<br>THE TREASURE AWAITS YOU...<br>Find the chest on the map!</div>
+  <button class="btn" onclick="closeTreasurePrompt()">LET'S GO!</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+
+// tier: 'platinum' (1-2), 'gold' (3-4), 'silver' (5-6), 'bronze' (7-8)
+const TIER_RINGS = {
+  platinum: { color: '#E5E4E2', glow: '#ffffff', label: 'PLATINUM', stroke: '#c0c0d8' },
+  gold:     { color: '#FFD700', glow: '#ffd700', label: 'GOLD',     stroke: '#b8860b' },
+  silver:   { color: '#C0C0C0', glow: '#c0c0c0', label: 'SILVER',   stroke: '#808080' },
+  bronze:   { color: '#CD7F32', glow: '#cd7f32', label: 'BRONZE',   stroke: '#8b4513' }
+};
+
+const SPONSORS = [
+  {
+    id: 0, name: "G-Research", icon: "📈", color: "#00bfff", tier: "platinum",
+    tagline: "Quantitative research & technology",
+    about: "G-Research is a leading quantitative research and technology firm. Based in London, they apply machine learning, big data and advanced mathematics to predict movements in global financial markets. Their engineering and research teams are among the most technically demanding in the industry.",
+    website: "https://www.gresearch.com/careers/",
+    internships: {
+      "Year 1-2": [
+        { title: "Insight Day", detail: "Competitive insight events for first/second years to meet researchers and engineers." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "Summer internship building low-latency trading infrastructure and data pipelines." },
+        { title: "Quantitative Researcher Intern", detail: "Apply ML and statistics to real financial datasets alongside senior researchers." }
+      ],
+      "Placement": [
+        { title: "Year in Industry", detail: "12-month placement in London. Competitive salary with strong conversion rate." }
+      ]
+    }
+  },
+  {
+    id: 1, name: "Huawei", icon: "🔶", color: "#cf0a2c", tier: "platinum",
+    tagline: "Connecting the world with innovation",
+    about: "Huawei is a global leader in ICT infrastructure and smart devices, operating in over 170 countries. Their research labs in the UK and Europe work on 5G/6G networks, cloud computing, AI chips, and operating systems — making them one of the largest R&D investors in the world.",
+    website: "https://career.huawei.com/reccampportal/portal5/index.html",
+    internships: {
+      "Year 1-2": [
+        { title: "Seeds for the Future", detail: "Two-week scholarship programme at Huawei HQ in Shenzhen for top early-year students." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "Work on cloud services, 5G protocol stacks, or AI frameworks in UK or European labs." },
+        { title: "Hardware Research Intern", detail: "Chip architecture, VLSI design, and embedded systems projects." }
+      ],
+      "Placement": [
+        { title: "Industrial Placement", detail: "12 months at Huawei's Reading or Paris research centre. Stipend + relocation support." }
+      ]
+    }
+  },
+  {
+    id: 2, name: "QRT", icon: "⚡", color: "#7b2fff", tier: "gold",
+    tagline: "Quantitative trading at global scale",
+    about: "Qube Research & Technologies (QRT) is a global quantitative and systematic investment manager. Founded by alumni of top quant funds, QRT combines cutting-edge research with world-class technology to trade across all asset classes with microsecond precision.",
+    website: "https://www.qube-rt.com/careers/",
+    internships: {
+      "Year 1-2": [
+        { title: "Spring Insight Programme", detail: "3-day immersive programme for first-year students exploring quant finance and tech." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "Build high-performance trading systems, execution infrastructure and data platforms." },
+        { title: "Quantitative Research Intern", detail: "Develop alpha signals and systematic strategies using large financial datasets." }
+      ],
+      "Placement": [
+        { title: "Year in Industry", detail: "12-month placement in London or Paris. One of the most competitive quant placements in Europe." }
+      ]
+    }
+  },
+  {
+    id: 3, name: "Optiver", icon: "🔷", color: "#0066cc", tier: "gold",
+    tagline: "We are market makers",
+    about: "Optiver is a leading global electronic market maker, trading on major exchanges worldwide. They write every line of their own trading software in-house and are obsessed with performance — their engineers work on some of the lowest-latency systems on earth.",
+    website: "https://optiver.com/working-at-optiver/career-opportunities/",
+    internships: {
+      "Year 1-2": [
+        { title: "Campus Events & Hackathons", detail: "Optiver regularly runs on-campus trading simulations and coding challenges for early years." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineer Intern", detail: "10-week summer internship working on exchange connectivity, risk systems, or algo frameworks." },
+        { title: "Trader Intern", detail: "Learn market making, pricing models and risk management on live options desks." }
+      ],
+      "Placement": [
+        { title: "Industrial Placement", detail: "12 months in Amsterdam or London. Engineering or trading track, excellent compensation." }
+      ]
+    }
+  },
+  {
+    id: 4, name: "Bending Spoons", icon: "🥄", color: "#ff5f57", tier: "silver",
+    tagline: "Building apps loved by millions",
+    about: "Bending Spoons is Europe's most downloaded app company, behind products like Evernote, Splice, and Remini. Their small, elite engineering team builds and acquires consumer apps used by hundreds of millions of people, with a culture of extreme ownership and radical focus.",
+    website: "https://bendingspoons.com/careers.html",
+    internships: {
+      "Year 1-2": [
+        { title: "Early Talent Events", detail: "Periodic online challenges and events spotlighting the Bending Spoons engineering culture." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "Work on iOS, Android or backend for a live consumer app with millions of active users." },
+        { title: "Data Science Intern", detail: "A/B testing, growth analytics and ML-powered personalisation." }
+      ],
+      "Placement": [
+        { title: "Placement Year", detail: "12 months in Milan. Highly selective — equivalent standards to grad hiring." }
+      ]
+    }
+  },
+  {
+    id: 5, name: "Jane Street", icon: "🌐", color: "#2ecc71", tier: "silver",
+    tagline: "A different kind of trading firm",
+    about: "Jane Street is a global quantitative trading firm and liquidity provider. Famous for their use of OCaml, their love of functional programming, and their rigorous technical interviews, they are considered one of the most intellectually stimulating workplaces in finance and tech.",
+    website: "https://www.janestreet.com/join-jane-street/",
+    internships: {
+      "Year 1-2": [
+        { title: "INSIGHT Programme", detail: "Selective 4-day programme in London or NYC introducing bright first-years to trading and tech." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "Build trading systems, risk tools and internal infrastructure primarily in OCaml." },
+        { title: "Quantitative Trading Intern", detail: "Work on real trading strategies with live capital — one of the best-paid internships in the world." }
+      ],
+      "Placement": [
+        { title: "Year in Industry", detail: "Rare but competitive — contact Jane Street directly. London or New York based." }
+      ]
+    }
+  },
+  {
+    id: 6, name: "TPP", icon: "🏥", color: "#00897b", tier: "bronze",
+    tagline: "Technology for better healthcare",
+    about: "TPP (The Phoenix Partnership) builds SystmOne, the clinical software used by over 7,000 NHS organisations including GP practices, hospitals and pharmacies. Based in Leeds, they are one of the UK's most impactful software companies — their code directly affects patient care.",
+    website: "https://tpp-uk.com/careers/",
+    internships: {
+      "Year 1-2": [
+        { title: "Summer Internship", detail: "TPP accepts first and second year students — one of the few top firms to do so. Leeds-based." }
+      ],
+      "Year 3+": [
+        { title: "Software Developer Intern", detail: "Work on SystmOne features used daily by NHS clinicians. C++, SQL and internal frameworks." },
+        { title: "Technical Analyst Intern", detail: "Bridge clinical requirements and engineering. Great for those interested in health tech." }
+      ],
+      "Placement": [
+        { title: "Year in Industry", detail: "12 months in Horsforth, Leeds. Excellent pay for a UK placement, strong grad pipeline." }
+      ]
+    }
+  },
+  {
+    id: 7, name: "Jump Trading", icon: "🚀", color: "#ff8c00", tier: "bronze",
+    tagline: "Research-driven algorithmic trading",
+    about: "Jump Trading is a research-driven, technology-focused trading firm operating across equities, futures, options and crypto markets globally. They invest heavily in hardware and software infrastructure, including FPGAs and custom networking, to gain performance at the nanosecond level.",
+    website: "https://www.jumptrading.com/jobs/",
+    internships: {
+      "Year 1-2": [
+        { title: "Campus Outreach", detail: "Jump attends top university career fairs and runs coding competitions to identify early talent." }
+      ],
+      "Year 3+": [
+        { title: "Software Engineering Intern", detail: "10-week summer internship on core trading systems, market data or network infrastructure." },
+        { title: "Quantitative Research Intern", detail: "Develop and back-test systematic trading strategies across multiple asset classes." }
+      ],
+      "Placement": [
+        { title: "Industrial Placement", detail: "12 months in London or Chicago. Extremely competitive, exceptional compensation." }
+      ]
+    }
+  }
+];
+
+const QUESTIONS = [
+  // ── DATA REPRESENTATION ──
+  { cat: "DATA REPRESENTATION", q: "How many bytes are in 1 kilobyte (in computing)?", opts: ["100","512","1000","1024"], ans: 3, exp: "In computing, 1 kilobyte = 1024 bytes (powers of 2)." },
+  { cat: "DATA REPRESENTATION", q: "What is the decimal value of the binary number 1010?", opts: ["8","9","10","12"], ans: 2, exp: "1010 in binary = 8+0+2+0 = 10 in decimal." },
+  { cat: "DATA REPRESENTATION", q: "How many bits are used to store a single character in ASCII?", opts: ["4","7","8","16"], ans: 2, exp: "Standard ASCII uses 8 bits (1 byte) per character." },
+  { cat: "DATA REPRESENTATION", q: "What is the binary representation of the decimal number 13?", opts: ["1011","1101","1110","1100"], ans: 1, exp: "13 = 8+4+1 = 1101 in binary." },
+  { cat: "DATA REPRESENTATION", q: "Which of these is NOT a type of data storage?", opts: ["Magnetic","Optical","Hydraulic","Solid State"], ans: 2, exp: "Hydraulic is not a type of data storage. Magnetic, optical and solid state are the three main types." },
+  { cat: "DATA REPRESENTATION", q: "What does 'resolution' mean when talking about digital images?", opts: ["Number of colours used","Number of pixels per image","File size in bytes","Brightness level"], ans: 1, exp: "Resolution refers to the number of pixels in an image (e.g. 1920×1080)." },
+  { cat: "DATA REPRESENTATION", q: "A graphics file uses 24-bit colour. How many colours can it represent?", opts: ["256","65,536","16,777,216","4,294,967,296"], ans: 2, exp: "24-bit colour = 2²⁴ = 16,777,216 possible colours (8 bits each for R, G, B)." },
+  { cat: "DATA REPRESENTATION", q: "What is the decimal value of binary 11111111?", opts: ["127","255","256","512"], ans: 1, exp: "11111111 = 128+64+32+16+8+4+2+1 = 255." },
+
+  // ── COMPUTER SYSTEMS ──
+  { cat: "COMPUTER SYSTEMS", q: "What does CPU stand for?", opts: ["Central Power Unit","Core Processing Utility","Central Processing Unit","Computer Program Unit"], ans: 2, exp: "CPU = Central Processing Unit — it executes instructions." },
+  { cat: "COMPUTER SYSTEMS", q: "What is the purpose of RAM in a computer?", opts: ["Permanent storage of files","Temporary storage for running programs","Processing arithmetic","Controlling input devices"], ans: 1, exp: "RAM (Random Access Memory) temporarily stores data and programs currently in use." },
+  { cat: "COMPUTER SYSTEMS", q: "Which component of the CPU performs arithmetic and logical operations?", opts: ["Control Unit","Cache","ALU","Register"], ans: 2, exp: "The ALU (Arithmetic Logic Unit) carries out calculations and comparisons." },
+  { cat: "COMPUTER SYSTEMS", q: "What does 'volatile' mean when describing memory?", opts: ["It runs very fast","Data is lost when power is removed","It can only be read, not written","It is used for long-term storage"], ans: 1, exp: "Volatile memory (like RAM) loses its contents when the power is switched off." },
+  { cat: "COMPUTER SYSTEMS", q: "Which type of software manages hardware and provides services to other programs?", opts: ["Application software","Utility software","Operating system","Compiler"], ans: 2, exp: "An operating system (e.g. Windows, macOS) manages hardware resources and provides a platform for applications." },
+  { cat: "COMPUTER SYSTEMS", q: "What is cache memory used for?", opts: ["Storing the operating system","Backing up user files","Speeding up CPU access to frequently used data","Connecting to the internet"], ans: 2, exp: "Cache is very fast memory close to the CPU that stores recently/frequently used data to reduce fetch time." },
+  { cat: "COMPUTER SYSTEMS", q: "A computer has a 64-bit processor. What does this refer to?", opts: ["Clock speed in GHz","Amount of RAM","Width of data processed at once","Number of cores"], ans: 2, exp: "64-bit means the processor handles 64 bits of data per clock cycle." },
+
+  // ── PROGRAMMING ──
+  { cat: "PROGRAMMING", q: "In National 5 Computing Science, what does a 'variable' store?", opts: ["A fixed value that never changes","A single value that can change during a program","A list of values","A section of reusable code"], ans: 1, exp: "A variable is a named storage location whose value can change while the program runs." },
+  { cat: "PROGRAMMING", q: "What type of loop runs a fixed number of times?", opts: ["WHILE loop","REPEAT UNTIL loop","FOR loop","IF loop"], ans: 2, exp: "A FOR loop (counted loop) repeats a set number of times." },
+  { cat: "PROGRAMMING", q: "What is the purpose of a conditional statement (IF…THEN…ELSE)?", opts: ["To repeat code","To store data","To make decisions based on a condition","To define a procedure"], ans: 2, exp: "An IF statement allows the program to choose different paths based on whether a condition is true or false." },
+  { cat: "PROGRAMMING", q: "Which of these is an example of a logical operator in programming?", opts: ["+ (addition)","AND","= (assignment)","& (concatenation)"], ans: 1, exp: "AND, OR and NOT are logical operators used to combine conditions in selections." },
+  { cat: "PROGRAMMING", q: "What does concatenation mean in programming?", opts: ["Multiplying two numbers","Joining two strings together","Comparing two values","Splitting a string apart"], ans: 1, exp: "Concatenation joins two strings end-to-end, e.g. \"Hello\" & \" World\" = \"Hello World\"." },
+  { cat: "PROGRAMMING", q: "What is a parameter in a subprogram/procedure?", opts: ["A variable declared inside the procedure","A value passed into the procedure when it is called","The name of the procedure","The output of the procedure"], ans: 1, exp: "A parameter is a value passed into a subprogram so it can work with different data each time." },
+  { cat: "PROGRAMMING", q: "Which standard algorithm finds the largest value in a list?", opts: ["Linear search","Bubble sort","Find minimum","Find maximum"], ans: 3, exp: "The Find Maximum algorithm steps through a list keeping track of the largest value found so far." },
+  { cat: "PROGRAMMING", q: "What does a WHILE loop check?", opts: ["A condition before each iteration","A condition after each iteration","The number of repetitions","Nothing — it loops forever"], ans: 0, exp: "A WHILE loop tests its condition at the start of each iteration and stops when it becomes false." },
+
+  // ── INFORMATION SYSTEMS ──
+  { cat: "INFORMATION SYSTEMS", q: "What is a database used for?", opts: ["Running programs","Organising and storing structured data","Connecting to the internet","Drawing graphics"], ans: 1, exp: "A database stores data in a structured way so it can be efficiently searched, sorted and updated." },
+  { cat: "INFORMATION SYSTEMS", q: "In a database, what is a 'field'?", opts: ["A complete row of data","A single piece of data about one record","The name of the table","A query result"], ans: 1, exp: "A field is a single category of data (e.g. surname, age) — one column in a table." },
+  { cat: "INFORMATION SYSTEMS", q: "What does a query do in a database?", opts: ["Adds new records","Deletes the database","Searches for and retrieves specific data","Formats the layout"], ans: 2, exp: "A query lets you search a database using conditions to retrieve specific records or fields." },
+  { cat: "INFORMATION SYSTEMS", q: "Which of these is an example of a primary key?", opts: ["A student's first name","A student's ID number (unique to each student)","A student's subject choice","A student's date of birth"], ans: 1, exp: "A primary key uniquely identifies each record — a student ID is unique whereas names or dates may not be." },
+  { cat: "INFORMATION SYSTEMS", q: "What is a flat-file database?", opts: ["A database stored on a floppy disk","A database with only one table","A database with many linked tables","A read-only database"], ans: 1, exp: "A flat-file database stores all data in a single table, with no relationships between tables." },
+
+  // ── WEB DESIGN ──
+  { cat: "WEB DESIGN", q: "What does HTML stand for?", opts: ["High Transfer Markup Language","HyperText Markup Language","HyperText Machine Language","Hyper Transfer Meta Language"], ans: 1, exp: "HTML = HyperText Markup Language — the standard language for creating web pages." },
+  { cat: "WEB DESIGN", q: "What is the purpose of CSS in web design?", opts: ["To store data in a database","To add interactivity to a page","To control the visual appearance and layout","To create server-side scripts"], ans: 2, exp: "CSS (Cascading Style Sheets) controls how HTML elements look — colours, fonts, layout, etc." },
+  { cat: "WEB DESIGN", q: "Which HTML tag creates a hyperlink?", opts: ["<link>","<url>","<a>","<href>"], ans: 2, exp: "The <a> (anchor) tag creates a hyperlink. The href attribute specifies the destination URL." },
+  { cat: "WEB DESIGN", q: "What does a wireframe show in web design?", opts: ["The final colour scheme","The server-side code","The layout and structure of a page without styling","The database design"], ans: 2, exp: "A wireframe is a simple diagram showing the layout and structure of a webpage before styling is added." },
+  { cat: "WEB DESIGN", q: "What is the purpose of the <head> section in an HTML document?", opts: ["To display the main visible content","To contain metadata, title and links to CSS/JS files","To create the navigation menu","To define the page footer"], ans: 1, exp: "The <head> section contains metadata (e.g. page title, charset) and links to stylesheets — it is not displayed directly." }
+];
+
+// ═══════════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════════
+
+const CELL = 22;
+const COLS = 25;
+const ROWS = 25;
+
+// Directions
+const DIR = { UP:[0,-1], DOWN:[0,1], LEFT:[-1,0], RIGHT:[1,0] };
+
+// Maze layout: 0=empty, 1=wall, 2=dot, 3=big dot (pellet), 4=sponsor pellet, 9=treasure
+let MAZE_TEMPLATE = [];
+
+function buildMaze() {
+  // 25x25 maze — exactly 8 cells marked as 4 (sponsor pellets)
+  // Positions of 4s: (7,2),(22,2),(2,7),(17,7),(7,16),(17,16),(2,21),(22,21) — all verified walkable
+  const T = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,3,1,1,2,1,1,4,1,1,2,1,1,1,2,1,1,2,1,1,2,1,1,3,1],
+    [1,2,1,1,2,1,1,2,1,1,2,2,2,2,2,1,1,2,1,1,2,1,1,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,1,1,2,1,2,1,1,1,2,1,1,1,2,1,1,1,2,1,2,1,1,2,1],
+    [1,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,1],
+    [1,1,1,1,2,1,1,2,1,1,0,1,1,1,0,1,1,4,1,1,2,1,1,1,1],
+    [1,1,1,1,2,1,1,0,1,0,0,0,0,0,0,0,1,0,1,1,2,1,1,1,1],
+    [1,1,1,1,2,1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,2,1,1,1,1],
+    [0,0,0,0,2,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,2,0,0,0,0],
+    [1,1,1,1,2,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,2,1,1,1,1],
+    [1,1,1,1,2,1,1,0,1,0,0,0,2,0,0,0,1,0,1,1,2,1,1,1,1],
+    [1,1,1,1,2,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,2,1,1,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,1,1,2,1,1,2,1,1,2,1,1,1,2,1,1,2,1,1,2,1,1,2,1],
+    [1,3,2,1,2,2,2,4,2,2,2,2,0,2,2,2,2,4,2,2,2,1,2,3,1],
+    [1,1,2,1,2,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,1,2,1,1],
+    [1,2,2,2,2,1,2,2,1,1,2,1,1,1,2,1,1,2,2,1,2,2,2,2,1],
+    [1,2,1,1,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,1,1,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,1,1,2,1,1,4,1,1,2,1,1,1,2,1,1,4,1,1,2,1,1,2,1],
+    [1,2,1,1,2,1,1,2,1,1,2,2,2,2,2,1,1,2,1,1,2,1,1,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  ];
+  return T.map(row => [...row]);
+}
+
+// ── Game variables ──
+let maze, playerX, playerY, playerDir, playerNext;
+let score, lives, sponsorsCollected, totalDots;
+let bugs = [];
+let sponsorPositions = [];
+let treasurePos = null;
+let treasureActive = false;
+let gameRunning = false;
+let gamePaused = false;
+let animFrame = null;
+let lastTime = 0;
+let playerAngle = 0;
+let playerMouthOpen = 0.8;
+let playerMouthDir = 1;
+let currentOverlay = null; // 'sponsor' | 'puzzle'
+let puzzleState = { questions: [], current: 0, answered: 0, correct: 0 };
+let deadCount = 0;
+let startTime = 0;
+let sponsorPulse = 0;
+
+// Build sponsor positions — one per type-4 cell, assigned round-robin so never out of bounds
+function placeSponsorPellets() {
+  const positions = [];
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (maze[y][x] === 4) positions.push({ x, y });
+    }
+  }
+  positions.sort(() => Math.random() - 0.5);
+  if (positions.length === 0) return [];
+  return SPONSORS.map((s, i) => {
+    const pos = positions[i % positions.length];
+    return { sponsorId: s.id, x: pos.x, y: pos.y, collected: false, pulse: Math.random() * Math.PI * 2 };
+  });
+}
+
+// ── BUG (ghost) config ──
+const BUG_TYPES = [
+  { name: "Creeper",  color: "#3a8a3a", scatter: { x:1,  y:1  } },
+  { name: "Skeleton", color: "#d0d0d0", scatter: { x:23, y:1  } },
+  { name: "Spider",   color: "#660000", scatter: { x:1,  y:23 } },
+  { name: "Zombie",   color: "#5a7a4a", scatter: { x:23, y:23 } }
+];
+
+function initBugs() {
+  return BUG_TYPES.map((t, i) => ({
+    ...t,
+    x: 11 + (i % 2),
+    y: 9 + Math.floor(i / 2),
+    dx: 0, dy: -1,
+    mode: 'scatter',
+    modeTimer: 0,
+    speed: 0.04 + i * 0.005,
+    px: (11 + (i % 2)) * CELL + CELL / 2,
+    py: (9 + Math.floor(i / 2)) * CELL + CELL / 2,
+    dead: false
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CANVAS SETUP
+// ═══════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const maxW = Math.min(window.innerWidth - 32, 560);
+  const scale = maxW / (COLS * CELL);
+  canvas.width = COLS * CELL;
+  canvas.height = ROWS * CELL;
+  canvas.style.width = (COLS * CELL * scale) + 'px';
+  canvas.style.height = (ROWS * CELL * scale) + 'px';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  START / RESTART
+// ═══════════════════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  showScreen('game-screen');
+  initGameState();
+}
+
+function restartGame() {
+  showScreen('game-screen');
+  initGameState();
+}
+
+function initGameState() {
+  maze = buildMaze();
+  playerX = 12; playerY = 23;   // row 23 col 12 confirmed open
+  playerDir = [0, 0]; playerNext = [0, 0];
+  score = 0; lives = 3; sponsorsCollected = 0;
+  deadCount = 0; startTime = Date.now();
+
+  // Count dots
+  totalDots = 0;
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++)
+      if (maze[y][x] === 2 || maze[y][x] === 3) totalDots++;
+
+  sponsorPositions = placeSponsorPellets();
+  bugs = initBugs();
+  treasurePos = null; treasureActive = false;
+  currentOverlay = null; playerFrozen = false;
+
+  updateHUD();
+  resizeCanvas();
+  gameRunning = true; gamePaused = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  lastTime = performance.now();
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════════════════
+
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === 'p' || e.key === 'P') {
+    if (gameRunning && !currentOverlay) gamePaused = !gamePaused;
+  }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+function getInputDir() {
+  if (keys['ArrowUp'] || keys['w'] || keys['W']) return [0,-1];
+  if (keys['ArrowDown'] || keys['s'] || keys['S']) return [0,1];
+  if (keys['ArrowLeft'] || keys['a'] || keys['A']) return [-1,0];
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) return [1,0];
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAME LOOP
+// ═══════════════════════════════════════════════════════════
+
+let playerProgress = 0; // 0..1 sub-cell movement
+let playerPx, playerPy; // pixel positions
+playerPx = 12 * CELL + CELL / 2;
+playerPy = 18 * CELL + CELL / 2;
+
+const PLAYER_SPEED = 0.07; // cells per frame tick
+const BUG_SPEED_BASE = 0.045;
+
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
+  const dt = Math.min(timestamp - lastTime, 50);
+  lastTime = timestamp;
+
+  if (!gamePaused && !currentOverlay) {
+    update(dt);
+  }
+  draw(timestamp);
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+function canMove(gx, gy) {
+  if (gx < 0 || gx >= COLS || gy < 0 || gy >= ROWS) {
+    // Tunnel
+    if (gy === 10) return true;
+    return false;
+  }
+  return maze[gy][gx] !== 1;
+}
+
+let playerMoveTimer = 0;
+function update(dt) {
+  sponsorPulse += dt * 0.003;
+
+  // ── Player movement ──
+  const inp = getInputDir();
+  if (inp) {
+    playerNext = inp;
+    if (playerFrozen) {
+      // First directional press after returning from underground unfreezes movement
+      playerFrozen = false;
+    }
+  }
+
+  if (playerFrozen) {
+    // Still animate mouth and smooth pixel pos while frozen, but don't move
+    const tpx = playerX * CELL + CELL / 2;
+    const tpy = playerY * CELL + CELL / 2;
+    playerPx += (tpx - playerPx) * 0.35;
+    playerPy += (tpy - playerPy) * 0.35;
+    updateBugs(dt);
+    // Check bug collision even when frozen
+    for (const bug of bugs) {
+      if (bug.dead) continue;
+      const bx = Math.round(bug.x);
+      const by = Math.round(bug.y);
+      if (bx === playerX && by === playerY) { triggerDeath(); return; }
+    }
+    return;
+  }
+
+  playerMoveTimer += dt;
+  const moveInterval = 80; // ms per cell
+  while (playerMoveTimer >= moveInterval) {
+    playerMoveTimer -= moveInterval;
+
+    // Try queued direction
+    let nx = playerX + playerNext[0];
+    let ny = playerY + playerNext[1];
+    // Tunnel wrap
+    if (nx < 0) nx = COLS - 1;
+    if (nx >= COLS) nx = 0;
+    if (canMove(nx, ny)) {
+      playerDir = [...playerNext];
+      playerX = nx; playerY = ny;
+    } else {
+      // Try current direction
+      let cx = playerX + playerDir[0];
+      let cy = playerY + playerDir[1];
+      if (cx < 0) cx = COLS - 1;
+      if (cx >= COLS) cx = 0;
+      if (canMove(cx, cy)) {
+        playerX = cx; playerY = cy;
+      }
+    }
+  }
+
+  // Smooth pixel pos
+  const tpx = playerX * CELL + CELL / 2;
+  const tpy = playerY * CELL + CELL / 2;
+  playerPx += (tpx - playerPx) * 0.35;
+  playerPy += (tpy - playerPy) * 0.35;
+
+  // Chomp animation
+  playerMouthOpen += 0.07 * playerMouthDir;
+  if (playerMouthOpen >= 0.85) playerMouthDir = -1;
+  if (playerMouthOpen <= 0.05) playerMouthDir = 1;
+
+  // ── Eat dots ──
+  const cell = maze[playerY][playerX];
+  if (cell === 2) { maze[playerY][playerX] = 0; score += 10; updateHUD(); }
+  if (cell === 3) { maze[playerY][playerX] = 0; score += 50; updateHUD(); }
+
+  // ── Eat sponsor pellets ──
+  for (const sp of sponsorPositions) {
+    if (!sp.collected && sp.x === playerX && sp.y === playerY) {
+      sp.collected = true;
+      sponsorsCollected++;
+      score += 200;
+      updateHUD();
+      pauseForSponsor(sp.sponsorId);
+      return;
+    }
+  }
+
+  // ── Treasure ──
+  if (treasureActive && treasurePos && playerX === treasurePos.x && playerY === treasurePos.y) {
+    triggerWin();
+    return;
+  }
+
+  // ── Move bugs ──
+  updateBugs(dt);
+
+  // ── Check bug collision ──
+  for (const bug of bugs) {
+    if (bug.dead) continue;
+    const bx = Math.round(bug.x);
+    const by = Math.round(bug.y);
+    if (bx === playerX && by === playerY) {
+      triggerDeath();
+      return;
+    }
+  }
+}
+
+let bugMoveTimers = [0,0,0,0];
+function updateBugs(dt) {
+  bugs.forEach((bug, i) => {
+    if (bug.dead) return;
+    bug.modeTimer += dt;
+    if (bug.modeTimer > 7000) {
+      bug.mode = bug.mode === 'scatter' ? 'chase' : 'scatter';
+      bug.modeTimer = 0;
+    }
+
+    bugMoveTimers[i] = (bugMoveTimers[i] || 0) + dt;
+    const interval = 180 - sponsorsCollected * 8;
+    if (bugMoveTimers[i] < interval) return;
+    bugMoveTimers[i] = 0;
+
+    // Simple AI: try to move toward player (chase) or scatter corner
+    const target = bug.mode === 'chase'
+      ? { x: playerX, y: playerY }
+      : bug.scatter;
+
+    const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+    // Shuffle dirs
+    dirs.sort(() => Math.random() - 0.5);
+    // Remove reverse
+    const rev = [-bug.dx, -bug.dy];
+    const validDirs = dirs.filter(d => !(d[0] === rev[0] && d[1] === rev[1]) && canMove(bug.x + d[0], bug.y + d[1]));
+
+    if (validDirs.length === 0) { bug.dx *= -1; bug.dy *= -1; return; }
+
+    // Pick direction that minimises distance to target
+    let best = validDirs[0];
+    let bestDist = Infinity;
+    for (const d of validDirs) {
+      const nx = bug.x + d[0], ny = bug.y + d[1];
+      const dist = (nx - target.x) ** 2 + (ny - target.y) ** 2;
+      if (dist < bestDist) { bestDist = dist; best = d; }
+    }
+    bug.dx = best[0]; bug.dy = best[1];
+    bug.x += bug.dx;
+    bug.y += bug.dy;
+    // Tunnel
+    if (bug.x < 0) bug.x = COLS - 1;
+    if (bug.x >= COLS) bug.x = 0;
+
+    bug.px = bug.x * CELL + CELL / 2;
+    bug.py = bug.y * CELL + CELL / 2;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DRAWING
+// ═══════════════════════════════════════════════════════════
+
+function draw(timestamp) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawMaze();
+  drawSponsorPellets(timestamp);
+  if (treasureActive && treasurePos) drawTreasure(timestamp);
+  drawBugs(timestamp);
+  drawPlayer();
+
+  if (gamePaused) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#f7c948';
+    ctx.font = `bold ${CELL * 1.2}px 'Press Start 2P', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+    ctx.textAlign = 'left';
+  }
+}
+
+function drawBlock(px, py, faceCol, highlightCol, shadowCol, detailFn) {
+  const s = CELL;
+  // Shadow edge (bottom-right)
+  ctx.fillStyle = shadowCol;
+  ctx.fillRect(px, py, s, s);
+  // Main face
+  ctx.fillStyle = faceCol;
+  ctx.fillRect(px + 1, py + 1, s - 2, s - 2);
+  // Highlight edge (top-left)
+  ctx.fillStyle = highlightCol;
+  ctx.fillRect(px + 1, py + 1, s - 2, 1);
+  ctx.fillRect(px + 1, py + 1, 1, s - 2);
+  // Optional per-block detail
+  if (detailFn) detailFn(px, py, s);
+}
+
+// Deterministic "random" based on grid position — gives consistent look without true random
+function cellNoise(x, y, mod) { return ((x * 7 + y * 13 + x * y * 3) >>> 0) % mod; }
+function drawPixelSquare(cx, cy, size, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.round(cx - size/2), Math.round(cy - size/2), size, size);
+}
+
+function drawMaze() {
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const px = x * CELL, py = y * CELL;
+      const cell = maze[y][x];
+
+      if (cell === 1) {
+        // ── WALL BLOCKS ──
+        // Zone logic: outer ring = stone brick, inner cage = mossy cobble, rest = dirt/wood mix
+        const isOuterRing = (x === 0 || x === COLS-1 || y === 0 || y === ROWS-1);
+        const isInnerCage = (x >= 7 && x <= 17 && y >= 7 && y <= 13);
+        const noise = cellNoise(x, y, 4);
+
+        if (isOuterRing) {
+          // Stone brick — grey with carved cross pattern
+          drawBlock(px, py, '#888', '#aaa', '#555', (bx, by, s) => {
+            ctx.fillStyle = '#666';
+            // Horizontal mortar line
+            ctx.fillRect(bx + 2, by + Math.floor(s/2), s - 4, 1);
+            // Vertical mortar offset per row
+            const off = (y % 2 === 0) ? Math.floor(s * 0.4) : Math.floor(s * 0.7);
+            ctx.fillRect(bx + off, by + 2, 1, Math.floor(s/2) - 2);
+          });
+        } else if (isInnerCage) {
+          // Mossy cobblestone — grey-green
+          drawBlock(px, py, '#6a7a5a', '#8a9a7a', '#3a4a2a', (bx, by, s) => {
+            ctx.fillStyle = '#4a6a3a';
+            if (cellNoise(x,y,3) === 0) ctx.fillRect(bx+3, by+4, 4, 3);
+            if (cellNoise(x,y,5) < 2)   ctx.fillRect(bx+10, by+8, 3, 4);
+            ctx.fillStyle = '#333';
+            ctx.fillRect(bx+2, by+2, 1, 1);
+            ctx.fillRect(bx+s-4, by+s-4, 2, 2);
+          });
+        } else if (noise === 0) {
+          // Dirt block
+          drawBlock(px, py, '#8B6340', '#a07848', '#5a3818', (bx, by, s) => {
+            ctx.fillStyle = '#6a4828';
+            ctx.fillRect(bx+4, by+5, 3, 2);
+            ctx.fillRect(bx+11, by+10, 2, 3);
+            ctx.fillRect(bx+7, by+14, 4, 2);
+          });
+        } else if (noise === 1) {
+          // Grass block (side view — green top strip, dirt below)
+          drawBlock(px, py, '#8B6340', '#a07848', '#5a3818', (bx, by, s) => {
+            // Green grass top
+            ctx.fillStyle = '#4a8a28';
+            ctx.fillRect(bx+2, by+2, s-4, 4);
+            ctx.fillStyle = '#5da030';
+            ctx.fillRect(bx+2, by+2, s-4, 2);
+            // Dirt detail
+            ctx.fillStyle = '#6a4828';
+            ctx.fillRect(bx+5, by+8, 3, 2);
+            ctx.fillRect(bx+12, by+13, 2, 2);
+          });
+        } else if (noise === 2) {
+          // Oak wood plank — warm brown with grain lines
+          drawBlock(px, py, '#9E7A3A', '#c09040', '#5a3a10', (bx, by, s) => {
+            ctx.fillStyle = '#7a5820';
+            // Vertical grain
+            for (let gx = 3; gx < s-2; gx += 5) {
+              ctx.fillRect(bx + gx, by+2, 1, s-4);
+            }
+            // Knot detail
+            if (cellNoise(x,y,6) < 2) {
+              ctx.fillStyle = '#5a3810';
+              ctx.fillRect(bx+7, by+8, 3, 2);
+              ctx.fillRect(bx+8, by+7, 1, 4);
+            }
+          });
+        } else {
+          // Cobblestone — medium grey with irregular patches
+          drawBlock(px, py, '#777', '#999', '#444', (bx, by, s) => {
+            ctx.fillStyle = '#555';
+            ctx.fillRect(bx+2, by+3, 5, 4);
+            ctx.fillRect(bx+10, by+8, 4, 5);
+            ctx.fillRect(bx+4, by+13, 6, 3);
+            ctx.fillStyle = '#999';
+            ctx.fillRect(bx+3, by+4, 2, 2);
+            ctx.fillRect(bx+11, by+9, 2, 2);
+          });
+        }
+      } else {
+        // ── FLOOR ──
+        // Use a dirt path pattern: darker squares in a grid, lighter in between
+        const isDarkTile = (x + y) % 2 === 0;
+        ctx.fillStyle = isDarkTile ? '#1c1c1c' : '#202020';
+        ctx.fillRect(px, py, CELL, CELL);
+        // Subtle path "dirt" flecks every few tiles
+        if (cellNoise(x,y,8) === 0) {
+          ctx.fillStyle = '#2a2218';
+          ctx.fillRect(px+3, py+3, 2, 2);
+          ctx.fillRect(px+14, py+12, 2, 1);
+        }
+        // Grid line
+        ctx.fillStyle = '#181818';
+        ctx.fillRect(px, py, 1, CELL);
+        ctx.fillRect(px, py, CELL, 1);
+
+        if (cell === 2) {
+          // Coal ore dot — dark grey square with sparkle
+          ctx.fillStyle = '#2a2a2a';
+          ctx.fillRect(px+CELL/2-4, py+CELL/2-4, 8, 8);
+          ctx.fillStyle = '#3a3a3a';
+          ctx.fillRect(px+CELL/2-3, py+CELL/2-3, 6, 6);
+          ctx.fillStyle = '#555';
+          ctx.fillRect(px+CELL/2-2, py+CELL/2-2, 2, 2);
+        } else if (cell === 3) {
+          // Emerald ore — vivid green pulsing gem
+          const t = Date.now() / 400;
+          const glow = Math.sin(t) * 0.35 + 0.75;
+          ctx.fillStyle = `rgba(30,160,30,${glow})`;
+          ctx.fillRect(px+CELL/2-5, py+CELL/2-5, 10, 10);
+          ctx.fillStyle = '#55ff55';
+          ctx.fillRect(px+CELL/2-3, py+CELL/2-3, 6, 6);
+          ctx.fillStyle = '#aaffaa';
+          ctx.fillRect(px+CELL/2-2, py+CELL/2-2, 2, 2);
+        }
+      }
+    }
+  }
+}
+
+function drawSponsorPellets(timestamp) {
+  for (const sp of sponsorPositions) {
+    if (sp.collected) continue;
+    const s = SPONSORS[sp.sponsorId];
+    const tier = TIER_RINGS[s.tier];
+    const cx = sp.x * CELL + CELL / 2;
+    const cy = sp.y * CELL + CELL / 2;
+    const pulse = Math.sin(sponsorPulse + sp.pulse) * 0.1 + 1;
+    const r = Math.round(CELL * 0.38 * pulse);
+
+    // Floor behind pellet
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(sp.x * CELL, sp.y * CELL, CELL, CELL);
+
+    // Tier-coloured pixel border (square, Minecraft style)
+    const bx = Math.round(cx - r), by = Math.round(cy - r);
+    const bs = r * 2;
+
+    // Outer glow (soft, square)
+    ctx.fillStyle = tier.color + '33';
+    ctx.fillRect(bx - 3, by - 3, bs + 6, bs + 6);
+
+    // Tier border
+    ctx.fillStyle = tier.color;
+    ctx.fillRect(bx - 2, by - 2, bs + 4, 2);  // top
+    ctx.fillRect(bx - 2, by + bs + 2, bs + 4, 2); // bottom
+    ctx.fillRect(bx - 2, by - 2, 2, bs + 4);  // left
+    ctx.fillRect(bx + bs + 2, by - 2, 2, bs + 4); // right
+
+    // Platinum gets double border
+    if (s.tier === 'platinum') {
+      ctx.fillStyle = tier.stroke + '99';
+      ctx.fillRect(bx - 4, by - 4, bs + 8, 1);
+      ctx.fillRect(bx - 4, by + bs + 4, bs + 8, 1);
+      ctx.fillRect(bx - 4, by - 4, 1, bs + 8);
+      ctx.fillRect(bx + bs + 4, by - 4, 1, bs + 8);
+    }
+
+    // Dark inner face
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fillRect(bx, by, bs, bs);
+
+    // Icon (emoji centered)
+    ctx.font = `${Math.round(CELL * 0.5)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s.icon, cx, cy);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+  }
+}
+
+function drawTreasure(timestamp) {
+  const cx = treasurePos.x * CELL + CELL / 2;
+  const cy = treasurePos.y * CELL + CELL / 2;
+  const t = timestamp / 500;
+  const bob = Math.sin(t) * 3;
+
+  // Draw a Minecraft chest (pixel block)
+  const s = Math.round(CELL * 0.8);
+  const bx = Math.round(cx - s / 2);
+  const by = Math.round(cy - s / 2) + bob;
+
+  // Gold glow background
+  ctx.fillStyle = '#ffaa0033';
+  ctx.fillRect(bx - 4, by - 4, s + 8, s + 8);
+
+  // Chest body — wood brown
+  drawPixelSquare(cx, cy + bob, s, '#8B5E2A');
+  ctx.fillStyle = '#6a3e10';
+  ctx.fillRect(bx + 2, by + 2, s - 4, s - 4);
+  // Lid stripe
+  ctx.fillStyle = '#a07030';
+  ctx.fillRect(bx + 2, by + 2, s - 4, Math.round(s * 0.38));
+  // Latch
+  ctx.fillStyle = '#ffaa00';
+  ctx.fillRect(Math.round(cx - 2), Math.round(cy + bob - 1), 4, 4);
+  // Highlight
+  ctx.fillStyle = '#c09050';
+  ctx.fillRect(bx + 2, by + 2, s - 4, 2);
+  ctx.fillRect(bx + 2, by + 2, 2, s - 4);
+}
+
+function drawBugs(timestamp) {
+  bugs.forEach(bug => {
+    if (bug.dead) return;
+    const px = bug.px !== undefined ? bug.px : bug.x * CELL + CELL / 2;
+    const py = bug.py !== undefined ? bug.py : bug.y * CELL + CELL / 2;
+    const s = Math.round(CELL * 0.78);
+    const bx = Math.round(px - s / 2);
+    const by = Math.round(py - s / 2);
+
+    if (bug.name === 'Creeper' || bug.name === 'NullPtr') {
+      // Creeper — green pixel face
+      ctx.fillStyle = '#3a8a3a';
+      ctx.fillRect(bx, by, s, s);
+      // Darker face pattern
+      ctx.fillStyle = '#2a6a2a';
+      ctx.fillRect(bx + 2, by + 2, s - 4, s - 4);
+      // Eyes (black squares)
+      const ew = Math.round(s * 0.18);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(bx + Math.round(s * 0.18), by + Math.round(s * 0.22), ew + 1, ew + 1);
+      ctx.fillRect(bx + Math.round(s * 0.58), by + Math.round(s * 0.22), ew + 1, ew + 1);
+      // Creeper mouth
+      ctx.fillRect(bx + Math.round(s * 0.3), by + Math.round(s * 0.55), Math.round(s * 0.15), Math.round(s * 0.15));
+      ctx.fillRect(bx + Math.round(s * 0.55), by + Math.round(s * 0.55), Math.round(s * 0.15), Math.round(s * 0.15));
+      ctx.fillRect(bx + Math.round(s * 0.3), by + Math.round(s * 0.7), Math.round(s * 0.4), Math.round(s * 0.12));
+      // Highlight
+      ctx.fillStyle = '#5aba5a';
+      ctx.fillRect(bx, by, s, 2);
+      ctx.fillRect(bx, by, 2, s);
+    } else if (bug.name === 'SegFault' || bug.name === 'Skeleton') {
+      // Skeleton — white/grey pixel face
+      ctx.fillStyle = '#d0d0d0';
+      ctx.fillRect(bx, by, s, s);
+      ctx.fillStyle = '#b0b0b0';
+      ctx.fillRect(bx + 2, by + 2, s - 4, s - 4);
+      // Hollow eye sockets
+      const ew = Math.round(s * 0.2);
+      ctx.fillStyle = '#111';
+      ctx.fillRect(bx + Math.round(s * 0.15), by + Math.round(s * 0.2), ew, ew);
+      ctx.fillRect(bx + Math.round(s * 0.6), by + Math.round(s * 0.2), ew, ew);
+      // Nose holes
+      ctx.fillRect(bx + Math.round(s * 0.35), by + Math.round(s * 0.5), Math.round(s * 0.1), Math.round(s * 0.12));
+      ctx.fillRect(bx + Math.round(s * 0.5), by + Math.round(s * 0.5), Math.round(s * 0.1), Math.round(s * 0.12));
+      // Teeth
+      ctx.fillStyle = '#eee';
+      for (let t = 0; t < 4; t++) {
+        ctx.fillRect(bx + Math.round(s * (0.2 + t * 0.17)), by + Math.round(s * 0.68), Math.round(s * 0.12), Math.round(s * 0.15));
+      }
+      ctx.fillStyle = '#888';
+      ctx.fillRect(bx, by, s, 2);
+      ctx.fillRect(bx, by, 2, s);
+    } else if (bug.name === 'InfLoop' || bug.name === 'Spider') {
+      // Spider — red eyes, dark body
+      ctx.fillStyle = '#330000';
+      ctx.fillRect(bx, by, s, s);
+      ctx.fillStyle = '#220000';
+      ctx.fillRect(bx + 2, by + 2, s - 4, s - 4);
+      // Red eyes
+      const ew = Math.round(s * 0.16);
+      ctx.fillStyle = '#ff2222';
+      for (let ei = 0; ei < 4; ei++) {
+        ctx.fillRect(bx + Math.round(s * (0.1 + ei * 0.22)), by + Math.round(s * 0.25), ew, ew);
+      }
+      // Legs
+      ctx.fillStyle = '#440000';
+      ctx.fillRect(bx - 3, by + Math.round(s * 0.3), 3, 2);
+      ctx.fillRect(bx - 3, by + Math.round(s * 0.55), 3, 2);
+      ctx.fillRect(bx + s, by + Math.round(s * 0.3), 3, 2);
+      ctx.fillRect(bx + s, by + Math.round(s * 0.55), 3, 2);
+      ctx.fillStyle = '#662222';
+      ctx.fillRect(bx, by, s, 2);
+    } else {
+      // MemLeak / Zombie — green-grey
+      ctx.fillStyle = '#5a7a4a';
+      ctx.fillRect(bx, by, s, s);
+      ctx.fillStyle = '#4a6a3a';
+      ctx.fillRect(bx + 2, by + 2, s - 4, s - 4);
+      const ew = Math.round(s * 0.18);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(bx + Math.round(s * 0.2), by + Math.round(s * 0.25), ew, ew);
+      ctx.fillRect(bx + Math.round(s * 0.58), by + Math.round(s * 0.25), ew, ew);
+      ctx.fillStyle = '#333';
+      ctx.fillRect(bx + Math.round(s * 0.25), by + Math.round(s * 0.6), Math.round(s * 0.5), Math.round(s * 0.12));
+      ctx.fillStyle = '#7aaa5a';
+      ctx.fillRect(bx, by, s, 2);
+    }
+
+    // Name label
+    ctx.fillStyle = bug.color;
+    ctx.font = `bold ${Math.round(CELL * 0.28)}px 'Press Start 2P', monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillText(bug.name, px, py + s / 2 + 10);
+    ctx.textAlign = 'left';
+  });
+}
+
+function drawPlayer() {
+  const px = playerPx;
+  const py = playerPy;
+  const s = Math.round(CELL * 0.78);
+  const bx = Math.round(px - s / 2);
+  const by = Math.round(py - s / 2);
+
+  // Steve pixel face
+  // Skin base
+  ctx.fillStyle = '#f0a868';
+  ctx.fillRect(bx, by, s, s);
+  // Hair (top portion — brown)
+  ctx.fillStyle = '#5a3810';
+  ctx.fillRect(bx, by, s, Math.round(s * 0.28));
+  // Eyes
+  const ew = Math.round(s * 0.18);
+  ctx.fillStyle = '#2244aa';
+  ctx.fillRect(bx + Math.round(s * 0.18), by + Math.round(s * 0.38), ew, ew);
+  ctx.fillRect(bx + Math.round(s * 0.62), by + Math.round(s * 0.38), ew, ew);
+  // Nose (small dot)
+  ctx.fillStyle = '#d08840';
+  ctx.fillRect(bx + Math.round(s * 0.43), by + Math.round(s * 0.55), Math.round(s * 0.14), Math.round(s * 0.1));
+  // Mouth
+  ctx.fillStyle = '#c06030';
+  ctx.fillRect(bx + Math.round(s * 0.22), by + Math.round(s * 0.7), Math.round(s * 0.55), Math.round(s * 0.1));
+  // Mouth open when moving
+  if ((playerDir[0] !== 0 || playerDir[1] !== 0) && !playerFrozen) {
+    const mOpen = Math.sin(Date.now() / 80) > 0;
+    if (mOpen) {
+      ctx.fillStyle = '#333';
+      ctx.fillRect(bx + Math.round(s * 0.3), by + Math.round(s * 0.68), Math.round(s * 0.4), Math.round(s * 0.14));
+    }
+  }
+  // Highlight (top-left corner)
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillRect(bx, by, s, 1);
+  ctx.fillRect(bx, by, 1, s);
+  // Shadow (bottom-right)
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(bx + s - 1, by, 1, s);
+  ctx.fillRect(bx, by + s - 1, s, 1);
+
+  // Direction arrow overlay (subtle)
+  if (playerFrozen) {
+    // Flashing "press to move" indicator
+    if (Math.floor(Date.now() / 400) % 2 === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = `${Math.round(CELL * 0.5)}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('⬆', px, by - 2);
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HUD
+// ═══════════════════════════════════════════════════════════
+
+function updateHUD() {
+  document.getElementById('hud-score').textContent = score;
+  const livesEl = document.getElementById('hud-lives');
+  livesEl.innerHTML = Array(lives).fill('<span class="life-icon">●</span>').join('');
+  document.getElementById('hud-sponsors').textContent = `${sponsorsCollected}/8`;
+  document.getElementById('hud-depth').textContent = `L${sponsorsCollected}`;
+  document.getElementById('depth-fill').style.width = `${(sponsorsCollected / 8) * 100}%`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPONSOR UNDERGROUND
+// ═══════════════════════════════════════════════════════════
+
+let currentSponsorWebsite = '#';
+function openSponsorWebsite() { window.open(currentSponsorWebsite, '_blank', 'noopener,noreferrer'); }
+
+function pauseForSponsor(sponsorId) {
+  currentOverlay = 'sponsor';
+  gamePaused = true;
+  const s = SPONSORS[sponsorId];
+
+  currentSponsorWebsite = s.website;
+  const tier = TIER_RINGS[s.tier];
+  document.getElementById('ug-depth-badge').textContent = `LEVEL -${sponsorsCollected}`;
+  document.getElementById('ug-depth-badge').style.background = tier.color;
+  document.getElementById('ug-depth-badge').style.color = s.tier === 'silver' || s.tier === 'platinum' ? '#000' : '#000';
+  document.getElementById('ug-company-header').textContent = s.name.toUpperCase() + '  [' + tier.label + ']';
+  document.getElementById('ug-icon').textContent = s.icon;
+  document.getElementById('ug-icon').style.color = s.color;
+  document.getElementById('ug-name').textContent = s.name;
+  document.getElementById('ug-name').style.color = s.color;
+  document.getElementById('ug-tagline').textContent = s.tagline;
+  document.getElementById('ug-about').textContent = s.about;
+  // website opened via openSponsorWebsite() using currentSponsorWebsite variable
+
+  // Tabs
+  const tabsEl = document.getElementById('ug-int-tabs');
+  const contEl = document.getElementById('ug-int-content');
+  const years = Object.keys(s.internships);
+  tabsEl.innerHTML = years.map((y, i) =>
+    `<div class="int-tab ${i === 0 ? 'active' : ''}" onclick="switchIntTab(this,'${y}',${sponsorId})">${y}</div>`
+  ).join('');
+  renderIntContent(s.internships[years[0]], contEl);
+
+  // Depth dots
+  const dotsEl = document.getElementById('depth-dots');
+  dotsEl.innerHTML = Array(8).fill(0).map((_, i) =>
+    `<div class="depth-dot ${i < sponsorsCollected ? 'filled' : ''}"></div>`
+  ).join('');
+
+  document.getElementById('underground-overlay').classList.add('active');
+  document.getElementById('underground-panel').scrollTop = 0;
+
+  // Check if all collected → place treasure
+  if (sponsorsCollected === 8 && !treasureActive) {
+    treasureActive = true;
+    treasurePos = { x: 12, y: 12 };
+  }
+}
+
+function switchIntTab(el, year, sponsorId) {
+  el.parentElement.querySelectorAll('.int-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderIntContent(SPONSORS[sponsorId].internships[year], document.getElementById('ug-int-content'));
+}
+
+function renderIntContent(roles, el) {
+  el.innerHTML = roles.map(r => `
+    <div class="role">
+      <div class="role-title">${r.title}</div>
+      <div class="role-detail">${r.detail}</div>
+    </div>
+  `).join('');
+}
+
+let playerFrozen = false; // true after returning from underground until player presses a direction
+
+function closeUnderground() {
+  document.getElementById('underground-overlay').classList.remove('active');
+  currentOverlay = null;
+  playerFrozen = true;       // freeze until player presses a direction
+  playerDir = [0, 0];        // stop current momentum
+  playerNext = [0, 0];
+  playerMoveTimer = 0;
+  gamePaused = false;
+  // Show treasure prompt if just collected all 8
+  if (sponsorsCollected === 8 && treasureActive) {
+    document.getElementById('treasure-prompt').classList.add('active');
+    gamePaused = true;
+  }
+}
+
+function closeTreasurePrompt() {
+  document.getElementById('treasure-prompt').classList.remove('active');
+  gamePaused = false;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DEATH & PUZZLES
+// ═══════════════════════════════════════════════════════════
+
+function triggerDeath() {
+  deadCount++;
+  lives--;
+  updateHUD();
+
+  if (lives <= 0) {
+    gameRunning = false;
+    document.getElementById('gameover-stats').innerHTML = `
+      SCORE <span class="win-stat-val">${score}</span><br>
+      SPONSORS <span class="win-stat-val">${sponsorsCollected}/8</span><br>
+      BUGS CAUGHT YOU <span class="win-stat-val">${deadCount}×</span>
+    `;
+    showScreen('gameover-screen');
+    return;
+  }
+
+  // Show puzzle
+  currentOverlay = 'puzzle';
+  gamePaused = true;
+  showPuzzle();
+}
+
+function showPuzzle() {
+  // Pick 2 questions from the pool, shuffle
+  const pool = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  puzzleState = {
+    questions: pool.slice(0, 2),
+    current: 0,
+    answered: 0,
+    correct: 0
+  };
+  renderPuzzleQ();
+  document.getElementById('puzzle-overlay').classList.add('active');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderPuzzleQ() {
+  const q = puzzleState.questions[puzzleState.current];
+  document.getElementById('puzzle-progress').textContent =
+    `QUESTION ${puzzleState.current + 1} OF ${puzzleState.questions.length}`;
+  document.getElementById('puzzle-q-category').textContent = `[ ${q.cat} ]`;
+  document.getElementById('puzzle-q-text').innerHTML = escHtml(q.q);
+
+  const optsEl = document.getElementById('puzzle-options');
+  optsEl.innerHTML = q.opts.map((o, i) =>
+    `<div class="puzzle-opt" id="popt-${i}" onclick="answerPuzzle(${i})">
+      <span class="puzzle-opt-key">${String.fromCharCode(65 + i)}</span> ${escHtml(o)}
+     </div>`
+  ).join('');
+
+  document.getElementById('puzzle-feedback').className = 'puzzle-feedback';
+  document.getElementById('puzzle-feedback').innerHTML = '';
+  document.getElementById('puzzle-next-btn').style.display = 'none';
+}
+
+function answerPuzzle(idx) {
+  const q = puzzleState.questions[puzzleState.current];
+  // Disable all opts
+  document.querySelectorAll('.puzzle-opt').forEach(o => o.style.pointerEvents = 'none');
+
+  const fb = document.getElementById('puzzle-feedback');
+  if (idx === q.ans) {
+    document.getElementById(`popt-${idx}`).classList.add('correct');
+    puzzleState.correct++;
+    fb.innerHTML = `✓ Correct! ${escHtml(q.exp)}`;
+    fb.className = 'puzzle-feedback show ok';
+  } else {
+    document.getElementById(`popt-${idx}`).classList.add('wrong');
+    document.getElementById(`popt-${q.ans}`).classList.add('correct');
+    fb.innerHTML = `✗ Wrong. ${escHtml(q.exp)}`;
+    fb.className = 'puzzle-feedback show fail';
+  }
+
+  puzzleState.answered++;
+  const isLast = puzzleState.current >= puzzleState.questions.length - 1;
+  const btn = document.getElementById('puzzle-next-btn');
+  btn.style.display = 'block';
+  btn.textContent = isLast ? 'BACK TO GAME →' : 'NEXT QUESTION →';
+}
+
+function puzzleNext() {
+  if (puzzleState.current < puzzleState.questions.length - 1) {
+    puzzleState.current++;
+    renderPuzzleQ();
+  } else {
+    // Done — respawn player
+    document.getElementById('puzzle-overlay').classList.remove('active');
+    currentOverlay = null;
+    gamePaused = false;
+    playerFrozen = true;
+    // Respawn at confirmed open cell
+    playerX = 12; playerY = 23;
+    playerDir = [0,0]; playerNext = [0,0];
+    playerPx = 12 * CELL + CELL / 2;
+    playerPy = 23 * CELL + CELL / 2;
+    // Regenerate bugs out of the way
+    bugs = initBugs();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WIN
+// ═══════════════════════════════════════════════════════════
+
+function triggerWin() {
+  gameRunning = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  const elapsed = Math.round((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  document.getElementById('win-stats').innerHTML = `
+    FINAL SCORE <span class="win-stat-val">${score}</span><br>
+    SPONSORS EXPLORED <span class="win-stat-val">8/8</span><br>
+    BUGS CAUGHT YOU <span class="win-stat-val">${deadCount}×</span><br>
+    TIME <span class="win-stat-val">${mins}m ${secs}s</span>
+  `;
+  showScreen('win-screen');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SPONSOR PREVIEW ON START SCREEN
+// ═══════════════════════════════════════════════════════════
+
+(function buildSponsorPreview() {
+  const el = document.getElementById('sponsor-preview');
+  el.innerHTML = SPONSORS.map(s => {
+    const tier = TIER_RINGS[s.tier];
+    return `<div class="sp-badge" style="border-color:${tier.color};color:${tier.color}">
+      ${s.icon} ${s.name}
+     </div>`;
+  }).join('');
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  RESIZE
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+</script>
+</body>
+</html>
